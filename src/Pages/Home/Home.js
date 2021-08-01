@@ -1,40 +1,53 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch ,useSelector } from "react-redux";
-import { getSlotsinit } from "../../Redux/Actions";
+import { useDispatch, useSelector } from "react-redux";
+import { getSlotsinit ,addAppointmentinit } from "../../Redux/Actions";
 import "./Home.css";
 
 const Home = () => {
-    const dispatch = useDispatch();
-    const {slots} = useSelector((state) => state.data)
+  const dispatch = useDispatch();
+  const { Slots ,newAppointment } = useSelector((state) => state.data);
   const [name, setname] = useState(" ");
   const [email, setemail] = useState("");
   const [duration, setDuration] = useState(30);
   const [slot, setSlot] = useState(0);
   const [appointmentDate, setAppointmentDate] = useState(
-    new Date().toISOString().substr(0, 16)
+    new Date().toISOString().substr(0, 10)
   );
-  const [availSlots, setAvailSlots] = useState([]);
 
   const getSlots = (e) => {
     e.preventDefault();
-    setAppointmentDate(e.target.value)
-    dispatch(getSlotsinit(e.target.value , "ist"))
-   
+    setAppointmentDate(e.target.value);
+    dispatch(getSlotsinit(e.target.value, "ist"));
   };
-  useEffect(() => {
-      console.log(availSlots)
-  }, [slots])
-
-  const formatAMPM = (date)=> {
+  const handleSlot = (e) => {
+    e.target.checked = "checked";
+    setSlot(e.target.value);
+  };
+  const formatAMPM = (date) => {
     var hours = date.getHours();
     var minutes = date.getMinutes();
-    var ampm = hours >= 12 ? 'pm' : 'am';
+    var ampm = hours >= 12 ? "pm" : "am";
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
-    minutes = minutes < 10 ? '0'+minutes : minutes;
-    var strTime = hours + ':' + minutes + ' ' + ampm;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    var strTime = hours + ":" + minutes + " " + ampm;
     return strTime;
-  }
+  };
+  const submitAppointment = (e) => {
+    e.preventDefault();
+    dispatch(addAppointmentinit({name, email, duration, slot, appointmentDate}))
+    setemail("");
+    setname("");
+    setAppointmentDate(new Date().toISOString().substr(0, 10));
+    setDuration(30)
+  };
+  useEffect(() => {
+    setSlot(Slots[0]);
+    
+  }, [Slots])
+  useEffect(() => {
+    dispatch(getSlotsinit(appointmentDate, "ist"));    
+  }, [newAppointment])
 
 
   return (
@@ -74,22 +87,38 @@ const Home = () => {
         <div className="newUserItem">
           <label>Slots</label>
           <div className="newUserSlot">
-              {     
-                  slots && slots.map((item,ind) =>{
-                    return <span key={ind}><input type="radio" name="slot" value={item} />
-                        <label htmlFor={item}>{formatAMPM(new Date(item))}</label></span>
-
-                  })
-              }           
-            
+            {Slots &&
+              Slots.map((item, ind) => {
+                return (
+                  <span key={ind}>
+                    <input
+                      type="radio"
+                      name="slot"
+                      value={item}
+                      onChange={handleSlot}
+                      defaultChecked ={ind == 0 ? true:false}
+                    />
+                    <label htmlFor={item}>{formatAMPM(new Date(item))}</label>
+                  </span>
+                );
+              })}
           </div>
         </div>
         <div className="newUserItem">
-          <label>Duration</label>
-          <input type="number" placeholder="" min="30" max="120" value={duration} onChange={e=>setDuration(e.target.setDuration)}/>
+          <label>Duration(in Minutes)</label>
+          <input
+            type="number"
+            placeholder=""
+            min="30"
+            max="120"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          />
         </div>
         <div className="newUserItem">
-          <button className="newUserAppointment">Create</button>
+          <button className="newUserAppointment" onClick={submitAppointment}>
+            Create
+          </button>
         </div>
       </form>
     </div>
